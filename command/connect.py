@@ -65,6 +65,7 @@ def mysql_connect(_input: Records, args: list[str]) -> Records:
 	host = paths[0] if paths else _setting("mysql_host", "mysql.host") or DEFAULT_HOST
 	user = opts.get("user") or _setting("mysql_user", "mysql.user") or DEFAULT_USER
 	password = opts.get("password")
+	print(password)
 	if password is None:
 		password = _setting("mysql_password", "mysql.password")
 	database = opts.get("database") or _setting("mysql_database", "mysql.database")
