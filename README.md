@@ -1,26 +1,69 @@
 # Open Shell MySQL
 
 Command package for [Open Shell](https://github.com/quantrpeter/Open-Shell).
-Install from GitHub:
+Commands use the `package:command` convention. This package is `mysql`.
+
+## Install
+
+From GitHub:
 
 ```bash
 openshell -c 'install https://github.com/quantrpeter/Open-Shell-Mysql'
-openshell -c 'mysql:connect'
 ```
 
-Or from a local checkout:
+From a local checkout of this repo:
 
 ```bash
-openshell -c 'install /Users/peter/workspace/Open-Shell-Mysql'
+openshell -c 'install .'
+# or:  openshell -c 'install /path/to/Open-Shell-Mysql'
 ```
 
-Commands use the `package:command` convention. This package is `mysql`.
+`install` copies `command/*.py` into `~/.config/oshell/package/mysql/` and
+prints a record:
+
+| Field | Meaning |
+|---|---|
+| `name` | Package name (`Open-Shell-Mysql` → `mysql`) |
+| `path` | Local folder the files were copied into |
+| `files` | Command files that were installed |
+| `source` | GitHub URL or local folder you installed from |
+| `status` | `installed` |
+| `kind` | `package` (not a website extra) |
+| `branch` | Git branch used (`main` for GitHub installs) |
+
+Then:
+
+```bash
+openshell -c 'mysql:connect'
+openshell -c 'help mysql:connect'
+```
+
+Requires the `mysql` CLI on `PATH` (MySQL or MariaDB client).
+
+## Commands
 
 | Command | Usage | What it does |
 |---|---|---|
-| `mysql:connect` | `mysql:connect [HOST] [-u USER] [-p PASS] [-P PORT] [-D DATABASE]` | Open a MySQL connection and store it for later commands |
+| `mysql:connect` | `mysql:connect [HOST] [-u USER] [-p PASS] [-P PORT] [-D DATABASE]` | Open a MySQL connection and remember it |
 
-Connection settings can also live in `~/.openshell`:
+Examples:
+
+```bash
+mysql:connect
+mysql:connect 127.0.0.1 -u root -p secret -P 3306 -D app
+```
+
+A successful connect stores the session at:
+
+```text
+~/.config/oshell/package/mysql/session.json
+```
+
+Later MySQL commands in this package will reuse that session.
+
+## Settings
+
+Connection defaults can live in `~/.openshell`:
 
 ```json
 {
@@ -32,4 +75,13 @@ Connection settings can also live in `~/.openshell`:
 }
 ```
 
-Requires the `mysql` CLI on `PATH` (MySQL or MariaDB client).
+Flags on `mysql:connect` override these settings.
+
+## Layout
+
+```text
+command/connect.py    mysql:connect
+README.md
+```
+
+The decorator is the command name (`mysql:connect`), not the filename.
