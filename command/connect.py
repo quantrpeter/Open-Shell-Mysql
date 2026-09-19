@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import tempfile
+from pathlib import Path
 
 from openshell import SETTINGS, Records, ShellError, command, parse_args, user_package_dir
 
@@ -80,26 +82,24 @@ def mysql_connect(_input: Records, args: list[str]) -> Records:
 		raise ShellError("mysql.no_client", "mysql client not found on PATH",
 						 "install the MySQL or MariaDB client")
 
-	command_line = [
-		client,
-		"--host", host,
-		"--port", str(port),
-		"--user", user,
-		"--connect-timeout=5",
-		"--batch",
-		"--raw",
-		"-e", "SELECT 1 AS ok",
+	config = [
+		"[client]",
+		f"host={host}",
+		f"port={port}",
+		f"user={user}",
+		"connect-timeout=5",
 	]
-	if database:
-		command_line.extend(["--database", database])
 	if password:
-		command_line.append(f"--password={password}")
-	else:
-		command_line.append("--password=")
+		config.append(f"password={password}")
+	if database:
+		config.append(f"database={database}")
 
+	with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".cnf", delete=False) as handle:
+		handle.write("\n".join(config) + "\n")
+		cnf = Path(handle.name)
 	try:
 		completed = subprocess.run(
-			command_line,
+			[client, f"--defaults-extra-file={cnf}", "--batch", "--raw", "-e", "SELECT 1 AS ok"],
 			check=False,
 			capture_output=True,
 			text=True,
@@ -107,6 +107,8 @@ def mysql_connect(_input: Records, args: list[str]) -> Records:
 	except OSError as err:
 		raise ShellError("mysql.connect_failed", f"cannot run mysql: {err}",
 						 "install the MySQL client") from err
+	finally:
+		cnf.unlink(missing_ok=True)
 	if completed.returncode != 0:
 		message = (completed.stderr or completed.stdout or "connection failed").strip()
 		raise ShellError("mysql.connect_failed", message,
