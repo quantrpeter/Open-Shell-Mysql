@@ -48,6 +48,7 @@ Requires the `mysql` CLI on `PATH` (MySQL or MariaDB client).
 | Command | Usage | What it does |
 |---|---|---|
 | `mysql:connect` | `mysql:connect [HOST] [-u USER] [-p PASS] [-P PORT] [-D DATABASE]` | Open a MySQL connection and remember it |
+| `mysql:session` | `mysql:session` | Dump the saved session (`host`, `port`, `user`, `password`, `database`) |
 | `mysql:sql` | `mysql:sql SQL …` | Run SQL on the saved session; each row is a record |
 
 Examples:
@@ -56,6 +57,7 @@ Examples:
 mysql:connect
 mysql:connect -u root -p 'secret!@#'
 mysql:connect 127.0.0.1 -u root -p secret -P 3306 -D app
+mysql:session
 mysql:sql select * from users
 mysql:sql "select id, name from users where id = 1"
 mysql:sql select * from users | take 5
@@ -89,7 +91,8 @@ Flags on `mysql:connect` override these settings.
 
 ```text
 command/client.py     shared session / mysql CLI helpers
-command/connect.py    mysql:connect
+command/cession.py    mysql:session
+command/sonnect.py    mysql:connect
 command/sql.py        mysql:sql
 README.md
 ```
