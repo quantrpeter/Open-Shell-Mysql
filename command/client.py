@@ -10,7 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from openshell import SETTINGS, ShellError, user_package_dir
+from openshell import ENV, ShellError, user_package_dir
 
 PACKAGE = "mysql"
 DEFAULT_HOST = "localhost"
@@ -24,7 +24,7 @@ def session_path() -> Path:
 
 def setting(*names: str) -> str:
 	for name in names:
-		value = SETTINGS.get(name)
+		value = ENV.get(name)
 		if value is None:
 			continue
 		text = str(value).strip()
@@ -34,7 +34,7 @@ def setting(*names: str) -> str:
 
 
 def int_setting(name: str, default: int) -> int:
-	value = SETTINGS.get(name)
+	value = ENV.get(name)
 	if value is None or value == "":
 		return default
 	try:
