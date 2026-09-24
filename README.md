@@ -41,14 +41,16 @@ openshell -c 'help mysql:connect'
 After a local `install ../Open-Shell-Mysql`, `reload` recopies `command/*.py`
 from that checkout. You do not need to install again after editing.
 
-Requires the `mysql` CLI on `PATH` (MySQL or MariaDB client).
+Requires the `mysql` CLI on `PATH` (MySQL or MariaDB client) and the
+`cryptography` package (`pip install cryptography`). The session password is
+sealed with Fernet before it is written to disk.
 
 ## Commands
 
 | Command | Usage | What it does |
 |---|---|---|
 | `mysql:connect` | `mysql:connect [HOST] [-u USER] [-p PASS] [-P PORT] [-D DATABASE]` | Open a MySQL connection and remember it |
-| `mysql:session` | `mysql:session` | Dump the saved session (`host`, `port`, `user`, `password`, `database`) |
+| `mysql:session` | `mysql:session` | Dump the saved session (`host`, `port`, `user`, `database`). The password is not printed |
 | `mysql:sql` | `mysql:sql SQL …` | Run SQL on the saved session; each row is a record |
 
 Examples:
@@ -69,7 +71,18 @@ A successful connect stores the session at:
 ~/.config/oshell/package/mysql/session.json
 ```
 
-Later MySQL commands in this package will reuse that session.
+The `password` field in that file is a Fernet envelope, not the secret. The
+file is mode `0600`. Later MySQL commands in this package unseal it in memory.
+
+Set the key before `mysql:connect`. Process environment wins over `~/.openshell`:
+
+```bash
+export mysql_session_key="$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')"
+```
+
+Or, less safely, `set mysql_session_key <fernet-key>` (that file is plain text
+and `env` prints it). An older session file that still has a plain password is
+accepted once and rewritten sealed.
 
 ## Settings
 
@@ -80,8 +93,8 @@ Connection defaults can live in `~/.openshell`:
   "mysql_host": "127.0.0.1",
   "mysql_port": 3306,
   "mysql_user": "root",
-  "mysql_password": "",
-  "mysql_database": ""
+  "mysqlsession.py    mysql:session
+command/cdatabase": ""
 }
 ```
 
